@@ -113,63 +113,76 @@ const UI = {
     },
 
     setupAuthListeners() {
-        const form = document.getElementById('auth-form');
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('user-email').value.trim();
-            const password = document.getElementById('user-password').value;
+        try {
+            const form = document.getElementById('auth-form');
+            if (form) {
+                form.onsubmit = async (e) => {
+                    e.preventDefault();
+                    const email = document.getElementById('user-email').value.trim();
+                    const password = document.getElementById('user-password').value;
 
-            state.setLoading(true);
-            try {
-                if (state.authMode === 'login') {
-                    const { error } = await supabase.auth.signInWithPassword({ email, password });
-                    if (error) {
-                        if (error.message.includes("Email not confirmed")) {
-                            throw new Error("⚠️ Por favor, confirme seu e-mail para autorizar o acesso.");
+                    state.setLoading(true);
+                    try {
+                        if (state.authMode === 'login') {
+                            const { error } = await supabase.auth.signInWithPassword({ email, password });
+                            if (error) {
+                                if (error.message.includes("Email not confirmed")) {
+                                    throw new Error("⚠️ Por favor, confirme seu e-mail para autorizar o acesso.");
+                                }
+                                throw error;
+                            }
+                        } else if (state.authMode === 'signup') {
+                            const fullName = document.getElementById('user-fullname').value.trim();
+                            const confirmPassword = document.getElementById('user-confirm-password').value;
+
+                            if (!fullName) throw new Error("Informe seu nome.");
+                            if (password !== confirmPassword) throw new Error("A confirmação de senha não confere.");
+                            if (password.length < 6) throw new Error("A senha deve ter pelo menos 6 dígitos.");
+
+                            const { error } = await supabase.auth.signUp({
+                                email, password, options: { data: { full_name: fullName } }
+                            });
+                            if (error) throw error;
+                            alert("Conta criada! 🎉 Verifique seu e-mail e clique no link de confirmação para poder entrar.");
+                            state.authMode = 'login';
+                            this.renderAuthUI();
+                        } else if (state.authMode === 'recovery') {
+                            const { error } = await supabase.auth.resetPasswordForEmail(email);
+                            if (error) throw error;
+                            alert("Enviamos um link de recuperação.");
                         }
-                        throw error;
+                    } catch (err) {
+                        alert(err.message);
                     }
-                } else if (state.authMode === 'signup') {
-                    const fullName = document.getElementById('user-fullname').value.trim();
-                    const confirmPassword = document.getElementById('user-confirm-password').value;
-
-                    if (!fullName) throw new Error("Informe seu nome.");
-                    if (password !== confirmPassword) throw new Error("A confirmação de senha não confere.");
-                    if (password.length < 6) throw new Error("A senha deve ter pelo menos 6 dígitos.");
-
-                    const { error } = await supabase.auth.signUp({
-                        email, password, options: { data: { full_name: fullName } }
-                    });
-                    if (error) throw error;
-                    alert("Conta criada! 🎉 Verifique seu e-mail e clique no link de confirmação para poder entrar.");
-                    state.authMode = 'login';
-                    this.renderAuthUI();
-                } else if (state.authMode === 'recovery') {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email);
-                    if (error) throw error;
-                    alert("Enviamos um link de recuperação.");
-                }
-            } catch (err) {
-                alert(err.message);
+                    state.setLoading(false);
+                };
             }
-            state.setLoading(false);
-        };
 
-        const toggleBtn = document.getElementById('toggle-auth');
-        toggleBtn.onclick = (e) => {
-            e.preventDefault();
-            state.authMode = (state.authMode === 'login') ? 'signup' : 'login';
-            this.renderAuthUI();
-        };
+            const toggleBtn = document.getElementById('toggle-auth');
+            if (toggleBtn) {
+                toggleBtn.onclick = (e) => {
+                    e.preventDefault();
+                    state.authMode = (state.authMode === 'login') ? 'signup' : 'login';
+                    this.renderAuthUI();
+                };
+            }
 
-        const forgotBtn = document.getElementById('forgot-password');
-        forgotBtn.onclick = (e) => {
-            e.preventDefault();
-            state.authMode = 'recovery';
-            this.renderAuthUI();
-        };
+            const forgotBtn = document.getElementById('forgot-password');
+            if (forgotBtn) {
+                forgotBtn.onclick = (e) => {
+                    e.preventDefault();
+                    state.authMode = 'recovery';
+                    this.renderAuthUI();
+                };
+            }
 
-        document.getElementById('logout-btn').onclick = () => supabase.auth.signOut();
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.onclick = () => supabase.auth.signOut();
+            }
+        } catch (e) {
+            console.error("Erro no setup de botões:", e);
+        }
     },
 
     renderAuthUI() {
@@ -356,4 +369,12 @@ const UI = {
     }
 };
 
-UI.init();
+try {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => UI.init());
+    } else {
+        UI.init();
+    }
+} catch (e) {
+    alert("Erro crítico no script: " + e.message);
+}
