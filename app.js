@@ -19,6 +19,7 @@ class AppState {
     }
 
     async init() {
+        console.log("🚀 Iniciando App...");
         this.setLoading(true);
         try {
             if (typeof window.supabase === 'undefined') {
@@ -44,7 +45,7 @@ class AppState {
 
     async handleAuthStateChange(session) {
         if (session) {
-            console.log("🔓 Sessão ativa para:", session.user.email);
+            console.log("🔓 Sessão ativa:", session.user.email);
             this.user = session.user;
             this.role = (this.user.email === ADMIN_EMAIL) ? 'admin' : 'cliente';
 
@@ -117,41 +118,53 @@ const UI = {
             e.preventDefault();
             const email = document.getElementById('user-email').value.trim();
             const password = document.getElementById('user-password').value;
-            const fullName = document.getElementById('user-fullname').value.trim();
 
             state.setLoading(true);
             try {
                 if (state.authMode === 'login') {
-                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) {
                         if (error.message.includes("Email not confirmed")) {
-                            throw new Error("⚠️ Verifique seu e-mail para confirmar a conta antes de entrar.");
+                            throw new Error("⚠️ Por favor, confirme seu e-mail para autorizar o acesso.");
                         }
                         throw error;
                     }
                 } else if (state.authMode === 'signup') {
+                    const fullName = document.getElementById('user-fullname').value.trim();
+                    const confirmPassword = document.getElementById('user-confirm-password').value;
+
+                    if (!fullName) throw new Error("Informe seu nome.");
+                    if (password !== confirmPassword) throw new Error("A confirmação de senha não confere.");
+                    if (password.length < 6) throw new Error("A senha deve ter pelo menos 6 dígitos.");
+
                     const { error } = await supabase.auth.signUp({
                         email, password, options: { data: { full_name: fullName } }
                     });
                     if (error) throw error;
-                    alert("Conta criada! Verifique seu e-mail e clique no link de confirmação.");
+                    alert("Conta criada! 🎉 Verifique seu e-mail e clique no link de confirmação para poder entrar.");
+                    state.authMode = 'login';
+                    this.renderAuthUI();
                 } else if (state.authMode === 'recovery') {
                     const { error } = await supabase.auth.resetPasswordForEmail(email);
                     if (error) throw error;
-                    alert("Link de recuperação enviado.");
+                    alert("Enviamos um link de recuperação.");
                 }
             } catch (err) {
-                alert("Erro: " + err.message);
+                alert(err.message);
             }
             state.setLoading(false);
         };
 
-        document.getElementById('toggle-auth').onclick = () => {
+        const toggleBtn = document.getElementById('toggle-auth');
+        toggleBtn.onclick = (e) => {
+            e.preventDefault();
             state.authMode = (state.authMode === 'login') ? 'signup' : 'login';
             this.renderAuthUI();
         };
 
-        document.getElementById('forgot-password').onclick = () => {
+        const forgotBtn = document.getElementById('forgot-password');
+        forgotBtn.onclick = (e) => {
+            e.preventDefault();
             state.authMode = 'recovery';
             this.renderAuthUI();
         };
@@ -166,32 +179,40 @@ const UI = {
         const toggleBtn = document.getElementById('toggle-auth');
         const nameGroup = document.getElementById('name-group');
         const passGroup = document.getElementById('password-group');
+        const confirmGroup = document.getElementById('confirm-password-group');
         const forgotBtn = document.getElementById('forgot-password');
 
         if (state.authMode === 'signup') {
             title.innerText = "Criar Conta";
-            subtitle.innerText = "Sua vitrine de crochê";
+            subtitle.innerText = "Sua vitrine exclusiva";
             submitBtn.innerText = "Cadastrar";
-            toggleBtn.innerText = "Já tem conta? Entre";
+            toggleBtn.innerText = "Já tem conta? Entre aqui";
             nameGroup.classList.remove('hidden');
             passGroup.classList.remove('hidden');
+            confirmGroup.classList.remove('hidden');
             forgotBtn.classList.add('hidden');
+            document.getElementById('user-confirm-password').setAttribute('required', 'true');
+            document.getElementById('user-fullname').setAttribute('required', 'true');
         } else if (state.authMode === 'recovery') {
             title.innerText = "Recuperar Senha";
             subtitle.innerText = "Enviaremos um link de acesso";
             submitBtn.innerText = "Enviar Link";
-            toggleBtn.innerText = "Voltar";
+            toggleBtn.innerText = "Voltar ao Login";
             nameGroup.classList.add('hidden');
             passGroup.classList.add('hidden');
+            confirmGroup.classList.add('hidden');
             forgotBtn.classList.add('hidden');
         } else {
             title.innerText = "Encantos da Nê";
             subtitle.innerText = "Dê vida ao seu crochê";
             submitBtn.innerText = "Entrar";
-            toggleBtn.innerText = "Criar nova conta";
+            toggleBtn.innerText = "Não tem conta? Cadastre-se";
             nameGroup.classList.add('hidden');
             passGroup.classList.remove('hidden');
+            confirmGroup.classList.add('hidden');
             forgotBtn.classList.remove('hidden');
+            document.getElementById('user-confirm-password').removeAttribute('required');
+            document.getElementById('user-fullname').removeAttribute('required');
         }
     },
 
@@ -201,8 +222,7 @@ const UI = {
     },
 
     showScreen(id) {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app-screen').classList.add('hidden');
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     },
 
@@ -213,14 +233,14 @@ const UI = {
         if (state.role === 'admin') {
             html = `
                 <button class="nav-btn" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Geral</span></button>
-                <button class="nav-btn" data-view="pieces"><i data-lucide="package"></i><span>Peças</span></button>
-                <button class="nav-btn" data-view="clients"><i data-lucide="users"></i><span>Clientes</span></button>
+                <button class="nav-btn" data-view="pieces"><i data-lucide="package"></i><span>Estoque</span></button>
+                <button class="nav-btn" data-view="clients"><i data-lucide="users"></i><span>Contatos</span></button>
                 <button class="nav-btn" data-view="orders"><i data-lucide="shopping-cart"></i><span>Pedidos</span></button>
                 <button class="nav-btn" data-view="ideias"><i data-lucide="lightbulb"></i><span>Sugestões</span></button>
             `;
         } else {
             html = `
-                <button class="nav-btn" data-view="dashboard"><i data-lucide="home"></i><span>Vitrine</span></button>
+                <button class="nav-btn" data-view="dashboard"><i data-lucide="home"></i><span>Loja</span></button>
                 <button class="nav-btn" data-view="client-ideias"><i data-lucide="lightbulb"></i><span>Sugestões</span></button>
             `;
         }
@@ -247,7 +267,7 @@ const UI = {
                 case 'dashboard': this.renderAdminDashboard(); break;
                 case 'pieces': this.renderAdminPieces(); break;
                 case 'ideias': this.renderAdminIdeias(); break;
-                default: content.innerHTML = `<div class="card"><h3>Em construção: ${view}</h3></div>`;
+                default: content.innerHTML = `<div class="card"><h3>Em breve: ${view}</h3></div>`;
             }
         } else {
             switch (view) {
@@ -261,21 +281,17 @@ const UI = {
     renderAdminDashboard() {
         const totalSales = state.orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
         document.getElementById('main-content').innerHTML = `
-            <div class="view-header"><h1>Olá, Nê! 🧶</h1></div>
+            <div class="view-header"><h1>Painel Geral</h1></div>
             <div class="grid">
-                <div class="card"><small>Vendas Totais</small><h3>R$ ${totalSales.toFixed(2)}</h3></div>
-                <div class="card"><small>Total de Peças</small><h3>${state.pieces.length}</h3></div>
-            </div>
-            <div class="card" style="margin-top: 24px">
-                <h3>Resumo de Atividades</h3>
-                <p>Navegue pelo menu para gerenciar seu estoque e pedidos.</p>
+                <div class="card"><small>Faturamento</small><h3>R$ ${totalSales.toFixed(2)}</h3></div>
+                <div class="card"><small>Produtos</small><h3>${state.pieces.length}</h3></div>
             </div>
         `;
     },
 
     renderAdminPieces() {
         document.getElementById('main-content').innerHTML = `
-            <div class="view-header"><h1>Estoque de Peças</h1></div>
+            <div class="view-header"><h1>Gestão de Estoque</h1></div>
             <div class="grid">
                 ${state.pieces.map(p => `
                     <div class="card">
@@ -289,8 +305,8 @@ const UI = {
 
     renderAdminIdeias() {
         document.getElementById('main-content').innerHTML = `
-            <div class="view-header"><h1>Ideias Recebidas</h1></div>
-            ${state.ideias.length === 0 ? '<p>Sem novas sugestões.</p>' :
+            <div class="view-header"><h1>Caixa de Sugestões</h1></div>
+            ${state.ideias.length === 0 ? '<p>Sem novidades.</p>' :
                 state.ideias.map(i => `
                 <div class="card">
                     <p>${i.descricao}</p><small>Contato: ${i.contato_preferencial}</small>
@@ -301,7 +317,7 @@ const UI = {
 
     renderClientCatalog() {
         document.getElementById('main-content').innerHTML = `
-            <div class="view-header"><h1>Vitrine de Peças 🧶</h1></div>
+            <div class="view-header"><h1>Catálogo de Peças 🧶</h1></div>
             <div class="grid">
                 ${state.pieces.map(p => `
                     <div class="card">
@@ -317,8 +333,8 @@ const UI = {
         document.getElementById('main-content').innerHTML = `
             <div class="view-header"><h1>Minhas Sugestões 💡</h1></div>
             <div class="card">
-                <h3>Tem uma ideia especial?</h3>
-                <p>Conte para a Nê e vamos transformar em crochê!</p>
+                <h3>Viu algo que gostou?</h3>
+                <p>Conte para a Nê e vamos fazer para você!</p>
                 <button class="btn btn-primary" style="margin-top: 12px">Mandar Minha Ideia</button>
             </div>
         `;

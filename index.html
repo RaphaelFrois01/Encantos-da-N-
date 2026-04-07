@@ -15,8 +15,8 @@
 
 <body>
     <div id="app">
-        <!-- Auth Screen (Initial) - REMOVED HIDDEN FOR DEBUG -->
-        <div id="auth-screen" class="screen">
+        <!-- Auth Screen (Initial) -->
+        <div id="auth-screen" class="screen hidden">
             <div class="auth-card animate-fade-in">
                 <img src="logo.png" alt="Logo" class="auth-logo">
                 <h2 id="auth-title">Bem-vinda!</h2>
@@ -34,6 +34,10 @@
                     <div class="form-group" id="password-group">
                         <label>Senha</label>
                         <input type="password" id="user-password" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group hidden" id="confirm-password-group">
+                        <label>Confirmar Senha</label>
+                        <input type="password" id="user-confirm-password" placeholder="••••••••">
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%"
                         id="auth-submit-btn">Entrar</button>
