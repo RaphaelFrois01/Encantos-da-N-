@@ -10,8 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
     <script>
-        document.write('<link rel="stylesheet" href="style.css?v=' + new Date().getTime() + '">');
+        window.onerror = function (msg, source, lineno, colno, error) {
+            alert("ERRO CAPTURADO PELO SISTEMA:\n\n" + msg + "\nLinha: " + lineno);
+            return false;
+        };
     </script>
 </head>
 
@@ -103,9 +107,7 @@
         <div id="notification-container"></div>
     </div>
 
-    <script>
-        document.write('<script src="app.js?v=' + new Date().getTime() + '"><\\/script>');
-    </script>
+    <script src="app.js"></script>
 </body>
 
 </html>
