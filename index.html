@@ -1,111 +1,60 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Encantos da Nê | Sistema de Crochê</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Encantos da Nê | Gestão Pessoal</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        document.write('<link rel="stylesheet" href="style.css?v=' + new Date().getTime() + '">');
-    </script>
 </head>
-
 <body>
     <div id="app">
-        <!-- Auth Screen (Initial) -->
+        <!-- Auth Screen -->
         <div id="auth-screen" class="screen">
             <div class="auth-card animate-fade-in">
                 <img src="logo.png" alt="Logo" class="auth-logo">
-                <h2 id="auth-title">Bem-vinda!</h2>
-                <p id="auth-subtitle">Faça login para continuar</p>
-
+                <h2 id="auth-title">Encantos da Nê</h2>
                 <form id="auth-form">
-                    <div class="form-group" id="name-group" class="hidden">
-                        <label>Seu Nome</label>
-                        <input type="text" id="user-fullname" placeholder="Nome Completo">
+                    <div class="form-group hidden" id="name-group">
+                        <label>Nome</label>
+                        <input type="text" id="user-fullname">
                     </div>
                     <div class="form-group">
                         <label>E-mail</label>
-                        <input type="email" id="user-email" placeholder="seu@email.com" required>
+                        <input type="email" id="user-email" required>
                     </div>
-                    <div class="form-group" id="password-group">
+                    <div class="form-group">
                         <label>Senha</label>
-                        <input type="password" id="user-password" placeholder="••••••••" required>
+                        <input type="password" id="user-password" required>
                     </div>
-                    <div class="form-group hidden" id="confirm-password-group">
-                        <label>Confirmar Senha</label>
-                        <input type="password" id="user-confirm-password" placeholder="••••••••">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%"
-                        id="auth-submit-btn">Entrar</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%" id="auth-submit-btn">Entrar</button>
                 </form>
-
-                <div class="auth-actions">
-                    <button id="toggle-auth" class="text-btn">Não tem conta? Cadastre-se</button>
-                    <button id="forgot-password" class="text-btn">Esqueci a senha</button>
-                </div>
-                <footer class="auth-footer">
-                    <p>&copy; 2026 Encantos da Nê. Todos os direitos reservados.</p>
-                    <p class="brand-footer">Powered by <strong>RGF - Finanças Pro</strong></p>
-                </footer>
+                <button id="toggle-auth" class="text-btn">Criar nova conta</button>
             </div>
         </div>
 
-        <!-- App Screen (After Login) -->
+        <!-- Main Screen -->
         <div id="app-screen" class="screen hidden">
-            <!-- Navigation -->
-            <nav class="main-nav" id="app-nav">
-                <div class="nav-logo">
-                    <img src="logo.png" alt="Encantos da Nê" id="brand-logo">
-                    <span>Encantos da Nê</span>
-                </div>
-                <!-- Nav items will be injected based on role -->
+            <nav class="main-nav">
+                <div class="nav-logo"><img src="logo.png" alt="Logo"><span>Encantos da Nê</span></div>
                 <div id="nav-container" class="nav-links"></div>
-                <button id="logout-btn" class="nav-btn logout">
-                    <i data-lucide="log-out"></i>
-                    <span>Sair</span>
-                </button>
+                <button id="logout-btn" class="nav-btn logout">Sair</button>
             </nav>
-
-            <!-- Main Content Area -->
-            <main id="main-content">
-                <!-- Content will be injected here via app.js -->
-            </main>
-
-            <footer class="app-footer">
-                <p>&copy; 2026 Encantos da Nê. By <strong>RGF - Finanças Pro</strong></p>
-            </footer>
+            <main id="main-content"></main>
         </div>
 
-        <!-- Modals -->
+        <!-- Modals and Loader -->
         <div id="modal-container" class="modal-overlay hidden">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modal-title">Novo Item</h2>
-                    <button id="close-modal" class="icon-btn"><i data-lucide="x"></i></button>
-                </div>
+                <div class="modal-header"><h2 id="modal-title"></h2><button id="close-modal">X</button></div>
                 <div id="modal-body"></div>
             </div>
         </div>
-
-        <!-- Loading Indicator -->
-        <div id="loading-overlay" class="hidden">
-            <div class="loader"></div>
-            <p>Sincronizando...</p>
-        </div>
-
-        <!-- Notification container -->
-        <div id="notification-container"></div>
+        <div id="loading-overlay" class="hidden"><div class="loader"></div></div>
     </div>
-
-    <script>
-        document.write('<script src="app.js?v=' + new Date().getTime() + '"><\\/script>');
-    </script>
+    <!-- Script com versão manual para forçar atualização -->
+    <script src="app.js?v=3.0"></script>
 </body>
-
 </html>
