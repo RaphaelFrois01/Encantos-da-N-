@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- PWA / MOBILE APP DEEP LINKS -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#D68C7A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Encantos Nê">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- HEADER -->
+        <header class="main-header">
+            <div class="user-info">
+                <span>Olá,</span>
+                <h2 id="user-name-display">Raphael</h2>
+            </div>
+            <button class="settings-btn" onclick="switchTab('ajustes')">
+                <i data-lucide="settings"></i>
+                <span class="notification-badge">!</span>
+            </button>
+        </header>
+
+        <!-- TOP TABS (Dinâmicas) -->
+        <nav id="top-nav" class="top-tabs hidden">
+            <!-- Renderizado via JS conforme a aba inferior selecionada -->
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main id="main-content">
+            <!-- ABA: INÍCIO -->
+            <section id="tab-inicio" class="tab-content">
+                <div class="welcome-card card">
+                    <img src="logo.png" alt="Logo" class="welcome-logo">
+                    <h3>Bem-vinda ao seu Ateliê!</h3>
+                    <p>Qual a meta de hoje?</p>
+                </div>
+                <div class="quick-stats">
+                    <div class="stat-card card">
+                        <small>Vendas Mês</small>
+                        <h4 id="stat-vendas">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card card">
+                        <small>Gastos Mês</small>
+                        <h4 id="stat-gastos">R$ 0,00</h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: PRECIFICAR (CONTÊINER PAI) -->
+            <section id="tab-precificar" class="tab-content hidden">
+                <!-- SUB-ABA: PRODUTOS -->
+                <div id="subtab-produtos" class="subtab-content">
+                    <div class="view-header">
+                        <h3>Seus Produtos</h3><button class="btn btn-primary" onclick="showModal('product')">+ Novo
+                            Produto</button>
+                    </div>
+                    <div id="lista-produtos" class="grid-list"></div>
+                </div>
+                <!-- SUB-ABA: MATERIAIS -->
+                <div id="subtab-materiais" class="subtab-content hidden">
+                    <div class="view-header">
+                        <h3>Seus Materiais</h3><button class="btn btn-primary" onclick="showModal('material')">+ Novo
+                            Material</button>
+                    </div>
+                    <div id="lista-materiais" class="grid-list"></div>
+                </div>
+                <!-- SUB-ABA: CUSTOS -->
+                <div id="subtab-custos" class="subtab-content hidden">
+                    <div class="view-header">
+                        <h3>Custos Fixos</h3><button class="btn btn-primary" onclick="showModal('cost')">+ Novo
+                            Custo</button>
+                    </div>
+                    <div class="card info-card">
+                        <i data-lucide="info"></i>
+                        <p>Custos fixos são despesas que você tem todo mês (Luz, Internet, MEI) e devem ser diluídos no
+                            preço das peças.</p>
+                    </div>
+                    <div id="lista-custos" class="grid-list"></div>
+                    <div class="total-bar"><span>Total fixo mensal:</span><strong id="total-custos-fixos">R$
+                            0,00</strong></div>
+                </div>
+
+                <!-- SUB-ABA: MÃO DE OBRA -->
+                <div id="subtab-maodeobra" class="subtab-content hidden">
+                    <div class="view-header">
+                        <h3>Mão de Obra</h3>
+                    </div>
+                    <div class="card settings-card">
+                        <h4><i data-lucide="calculator" class="icon-primary"></i> Calculadora de Mão de Obra</h4>
+                        <p class="text-small">Defina sua meta mensal para calcular seu valor por hora.</p>
+                        <div class="form-group" style="margin-top:20px">
+                            <label>Salário Desejado (Pro-labore)</label>
+                            <input type="number" id="cfg-salario" value="2000" oninput="calculateLabor()">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Horas/Dia</label><input type="number" id="cfg-horas-dia"
+                                    value="6" oninput="calculateLabor()"></div>
+                            <div class="form-group"><label>Dias/Mês</label><input type="number" id="cfg-dias-mes"
+                                    value="22" oninput="calculateLabor()"></div>
+                        </div>
+                        <div class="total-bar"
+                            style="background: #fdfcf8; border: 2px dashed var(--primary); color: var(--primary)">
+                            <span>Seu valor por hora:</span>
+                            <strong id="display-valor-hora">R$ 0,00</strong>
+                        </div>
+                        <input type="hidden" id="cfg-valor-hora">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: GESTÃO (CONTÊINER PAI) -->
+            <section id="tab-gestao" class="tab-content hidden">
+                <!-- SUB-ABA: VENDAS -->
+                <div id="subtab-vendas" class="subtab-content">
+                    <div class="view-header">
+                        <h3>Vendas</h3><button class="btn btn-primary" onclick="showModal('sale')">+ Nova Venda</button>
+                    </div>
+                    <div id="lista-vendas" class="grid-list"></div>
+                </div>
+                <!-- SUB-ABA: FINANCEIRO -->
+                <div id="subtab-financeiro" class="subtab-content hidden">
+                    <h3>Resumo Financeiro</h3>
+                    <div class="card summary-card">
+                        <div class="summary-row"><span>Entradas (Vendas):</span><span id="fin-entradas"
+                                class="text-green">R$ 0,00</span></div>
+                        <div class="summary-row"><span>Saídas (Gastos/Fixos):</span><span id="fin-saidas"
+                                class="text-red">R$ 0,00</span></div>
+                        <hr>
+                        <div class="summary-row"><strong>Saldo:</strong><strong id="fin-saldo">R$ 0,00</strong></div>
+                    </div>
+                </div>
+                <!-- SUB-ABA: ESTOQUE -->
+                <div id="subtab-estoque" class="subtab-content hidden">
+                    <h3>Controle de Materiais</h3>
+                    <div id="lista-estoque" class="grid-list"></div>
+                </div>
+            </section>
+
+            <!-- ABA: CONTATOS -->
+            <section id="tab-contatos" class="tab-content hidden">
+                <div class="view-header">
+                    <h3>Contatos</h3><button class="btn btn-primary" onclick="showModal('client')">+ Novo
+                        Contato</button>
+                </div>
+                <div id="lista-clientes" class="grid-list"></div>
+            </section>
+
+            <!-- ABA: AJUSTES -->
+            <section id="tab-ajustes" class="tab-content hidden">
+                <div class="view-header">
+                    <h3>Configurações</h3>
+                </div>
+                <div class="card">
+                    <h4>Backup e Dados</h4>
+                    <p class="text-small">Sendo um app offline, seus dados ficam no navegador. Faça backup para
+                        segurança.</p>
+                    <button class="btn btn-secondary w-full" style="margin-top:20px" onclick="exportData()">Exportar
+                        Dados (JSON)</button>
+                    <label class="btn btn-outline w-full text-center" style="margin-top:10px; display:block">
+                        Importar Dados
+                        <input type="file" style="display:none" onchange="importData(this)">
+                    </label>
+                </div>
+            </section>
+        </main>
+
+        <!-- BOTTOM NAV BAR -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="switchTab('inicio')">
+                <div class="nav-icon-circle"><i data-lucide="home"></i></div>
+                <span>Início</span>
+            </button>
+            <button class="nav-btn" data-tab="precificar" onclick="switchTab('precificar')">
+                <div class="nav-icon-circle"><i data-lucide="dollar-sign"></i></div>
+                <span>Precificar</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('gestao')">
+                <div class="nav-icon-circle"><i data-lucide="briefcase"></i></div>
+                <span>Gestão</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('contatos')">
+                <div class="nav-icon-circle"><i data-lucide="users"></i></div>
+                <span>Contatos</span>
+            </button>
+        </nav>
+
+        <!-- MODAL -->
+        <div id="modal-container" class="modal-overlay hidden">
+            <div class="modal-content animate-slide-up">
+                <div class="modal-header">
+                    <h3 id="modal-title"></h3><button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+                <div id="modal-body" class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // REGISTRO DO SERVICE WORKER (APP MODE)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('App Pronto: ', reg))
+                    .catch(err => console.log('Erro App: ', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
