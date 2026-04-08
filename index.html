@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- PWA / MOBILE APP DEEP LINKS -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#D68C7A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Encantos Nê">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SUPABASE SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <title>Encantos da Nê | Gestão Pro Cloud</title>
+</head>
+
+<body>
+    <div id="loading-overlay" class="hidden">
+        <div class="loader"></div>
+    </div>
+
+    <!-- TELA DE AUTENTICAÇÃO -->
+    <div id="auth-screen" class="screen">
+        <div class="auth-container">
+            <img src="logo.png" alt="Logo" class="auth-logo">
+            <h2 id="auth-title">Bem-vinda de volta!</h2>
+            <p id="auth-subtitle">Acesse sua conta para sincronizar seu ateliê.</p>
+
+            <form id="auth-form" class="auth-form">
+                <div class="form-group" id="name-group" class="hidden">
+                    <label>Nome do Ateliê</label>
+                    <input type="text" id="auth-name" placeholder="Como devemos te chamar?">
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="auth-email" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="btn btn-primary w-full">Entrar</button>
+            </form>
+
+            <p class="auth-toggle">
+                <a href="#" id="toggle-auth-mode">Não tem conta? Cadastre-se</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- TELA PRINCIPAL (APP) -->
+    <div id="app-screen" class="screen hidden">
+        <header class="main-header">
+            <div class="user-info">
+                <span>Olá,</span>
+                <h2 id="user-name-display">...</h2>
+            </div>
+            <button class="settings-btn" onclick="switchTab('ajustes')">
+                <i data-lucide="settings"></i>
+                <span class="notification-badge">!</span>
+            </button>
+        </header>
+
+        <nav id="top-nav" class="top-tabs hidden"></nav>
+
+        <main id="main-content">
+            <!-- ABA: INÍCIO -->
+            <section id="tab-inicio" class="tab-content">
+                <div class="welcome-card card">
+                    <img src="logo.png" alt="Logo" class="welcome-logo">
+                    <h3>Ateliê Sincronizado!</h3>
+                    <p>Seus dados estão seguros na nuvem.</p>
+                </div>
+                <div class="quick-stats">
+                    <div class="stat-card card"><small>Vendas Mês</small>
+                        <h4 id="stat-vendas">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card card"><small>Gastos Mês</small>
+                        <h4 id="stat-gastos">R$ 0,00</h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: PRECIFICAR -->
+            <section id="tab-precificar" class="tab-content hidden">
+                <div id="subtab-produtos" class="subtab-content">
+                    <div class="view-header">
+                        <h3>Produtos</h3><button class="btn btn-primary" onclick="showModal('product')">+ Novo</button>
+                    </div>
+                    <div id="lista-produtos" class="grid-list"></div>
+                </div>
+                <div id="subtab-materiais" class="subtab-content hidden">
+                    <div class="view-header">
+                        <h3>Materiais</h3><button class="btn btn-primary" onclick="showModal('material')">+
+                            Novo</button>
+                    </div>
+                    <div id="lista-materiais" class="grid-list"></div>
+                </div>
+                <div id="subtab-custos" class="subtab-content hidden">
+                    <div class="view-header">
+                        <h3>Custos Fixos</h3><button class="btn btn-primary" onclick="showModal('cost')">+ Novo</button>
+                    </div>
+                    <div id="lista-custos" class="grid-list"></div>
+                    <div class="total-bar"><span>Fixo mensal:</span><strong id="total-custos-fixos">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div id="subtab-maodeobra" class="subtab-content hidden">
+                    <div class="view-header">
+                        <h3>Mão de Obra</h3>
+                    </div>
+                    <div class="card settings-card">
+                        <div class="form-group"><label>Salário Desejado</label><input type="number" id="cfg-salario"
+                                oninput="calculateLabor()"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Horas/Dia</label><input type="number" id="cfg-horas-dia"
+                                    oninput="calculateLabor()"></div>
+                            <div class="form-group"><label>Dias/Mês</label><input type="number" id="cfg-dias-mes"
+                                    oninput="calculateLabor()"></div>
+                        </div>
+                        <div class="total-bar"><span>Valor por hora:</span><strong id="display-valor-hora">R$
+                                0,00</strong></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: GESTÃO -->
+            <section id="tab-gestao" class="tab-content hidden">
+                <div id="subtab-vendas" class="subtab-content">
+                    <div class="view-header">
+                        <h3>Vendas</h3><button class="btn btn-primary" onclick="showModal('sale')">+ Nova</button>
+                    </div>
+                    <div id="lista-vendas" class="grid-list"></div>
+                </div>
+                <div id="subtab-financeiro" class="subtab-content hidden">
+                    <h3>Financeiro</h3>
+                    <div class="card summary-card">
+                        <div class="summary-row"><span>Entradas:</span><span id="fin-entradas" class="text-green">R$
+                                0,00</span></div>
+                        <div class="summary-row"><span>Saídas:</span><span id="fin-saidas" class="text-red">R$
+                                0,00</span></div>
+                        <hr>
+                        <div class="summary-row"><strong>Saldo:</strong><strong id="fin-saldo">R$ 0,00</strong></div>
+                    </div>
+                </div>
+                <div id="subtab-estoque" class="subtab-content hidden">
+                    <h3>Estoque</h3>
+                    <div id="lista-estoque" class="grid-list"></div>
+                </div>
+            </section>
+
+            <!-- ABA: CONTATOS -->
+            <section id="tab-contatos" class="tab-content hidden">
+                <div class="view-header">
+                    <h3>Contatos</h3><button class="btn btn-primary" onclick="showModal('client')">+ Novo</button>
+                </div>
+                <div id="lista-clientes" class="grid-list"></div>
+            </section>
+
+            <!-- ABA: AJUSTES -->
+            <section id="tab-ajustes" class="tab-content hidden">
+                <div class="card">
+                    <h4>Perfil Cloud</h4>
+                    <div class="form-group"><label>Nome do Ateliê</label><input type="text" id="cfg-user-name"
+                            oninput="updateUserName()"></div>
+                    <button class="btn btn-outline w-full" style="margin-top:10px" onclick="handleLogout()">Sair da
+                        Conta</button>
+                </div>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="switchTab('inicio')">
+                <div class="nav-icon-circle"><i data-lucide="home"></i></div><span>Início</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('precificar')">
+                <div class="nav-icon-circle"><i data-lucide="dollar-sign"></i></div><span>Precificar</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('gestao')">
+                <div class="nav-icon-circle"><i data-lucide="briefcase"></i></div><span>Gestão</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('contatos')">
+                <div class="nav-icon-circle"><i data-lucide="users"></i></div><span>Contatos</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal-container" class="modal-overlay hidden">
+        <div class="modal-content animate-slide-up">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3><button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('Erro PWA: ', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
